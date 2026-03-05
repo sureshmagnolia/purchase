@@ -937,7 +937,11 @@
     <div id="step-1" class="step-content hidden">
       <div class="toolbar no-print">
         <input type="text" class="search-box" id="search-box" placeholder="🔍 Search items…" oninput="renderTable()" />
-        <button class="btn btn-gold" onclick="autoSelectLowest()">⚡ Auto-Select Lowest for All</button>
+        <select id="dept-filter" class="search-box" style="margin-left: 10px; max-width: 250px; padding: 6px;"
+          onchange="renderTable()">
+          <option value="">All Departments</option>
+        </select>
+        <button class="btn btn-gold" onclick="autoSelectLowest()" style="margin-left: 10px;">⚡ Auto-Select</button>
         <div id="assign-status"></div>
         <div class="toolbar-right">
           <button class="btn btn-primary" onclick="showStep(2);generateReports()">Generate Reports →</button>
@@ -1153,6 +1157,7 @@
       // --- parse data rows ---
       boqItems = [];
       selections = {};
+      let currentDepartment = 'General';
       for (let r = DATA_START; r <= range.e.r; r++) {
         const slno = cellVal(ws, r, 0);
         const desc = cellVal(ws, r, 1);
@@ -1170,6 +1175,10 @@
         // Section row = has description but no vendor data / all blank rates
         let isSection = (qtyRaw === '' && !unit) || (slno === '' && desc !== '');
 
+        if (isSection && desc) {
+          currentDepartment = desc.trim();
+        }
+
         const rates = {};
         let anyRate = false;
         for (const vname of tempVendors) {
@@ -1181,8 +1190,10 @@
         }
         if (!anyRate && !isSection && !slno) continue;
 
-        boqItems.push({ slno, desc, qty, unit, code, isSection, rates });
+        boqItems.push({ slno, desc, qty, unit, code, isSection, rates, department: currentDepartment });
       }
+
+      populateDeptFilter();
     }
 
     // ===================== TABLE =====================
@@ -1196,10 +1207,32 @@
       thead.innerHTML = html;
     }
 
+    function populateDeptFilter() {
+      const deptFilter = document.getElementById('dept-filter');
+      const uniqueDepts = [...new Set(boqItems.filter(item => item.isSection).map(item => item.department))];
+
+      let optionsHtml = '<option value="">All Departments</option>';
+      uniqueDepts.forEach(dept => {
+        if (dept && dept !== 'General') {
+          optionsHtml += `<option value="${dept}">${dept}</option>`;
+        }
+      });
+      deptFilter.innerHTML = optionsHtml;
+    }
+
     function getFiltered() {
       const q = document.getElementById('search-box').value.toLowerCase();
-      if (!q) return boqItems;
-      return boqItems.filter(r => r.desc.toLowerCase().includes(q) || (r.slno + '').toLowerCase().includes(q));
+      const dept = document.getElementById('dept-filter').value;
+
+      let filtered = boqItems;
+
+      if (dept) {
+        filtered = filtered.filter(r => r.department === dept);
+      }
+
+      if (!q) return filtered;
+
+      return filtered.filter(r => r.desc.toLowerCase().includes(q) || (r.slno + '').toLowerCase().includes(q));
     }
 
     function renderTable() {
@@ -1417,9 +1450,14 @@
         extMetaHtml += '</div>';
       }
 
+      const filteredItems = getFiltered();
+
       // Each firm tab
       assignedVendors.forEach((v, vi) => {
-        const vItems = vendorItems[v.name] || [];
+        // filter vItems to only exist in the current filteredItems context
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
+
         let firmTotal = 0;
         const active = vi === 0 ? 'active' : '';
         tabHtml += `<div class="tab ${active}" onclick="switchTab(${vi})">${v.name}</div>`;
@@ -1565,7 +1603,7 @@
       fullHdr += `</tr>`;
 
       let fullRows = '';
-      boqItems.forEach(item => {
+      filteredItems.forEach(item => {
         if (item.isSection) {
           fullRows += `<tr class="section-row"><td colspan="${4 + vendors.length}">${item.slno ? item.slno + '. ' : ''} ${item.desc}</td></tr>`;
           return;
@@ -1651,9 +1689,10 @@
       const authority = document.getElementById('meta-authority').value || '';
       const work = document.getElementById('meta-work').value || '';
       const date = document.getElementById('meta-date').value || '';
+      const filteredItems = getFiltered();
 
       const vendorItems = {};
-      boqItems.forEach(item => {
+      filteredItems.forEach(item => {
         if (item.isSection) return;
         const v = selections[item._idx];
         if (v) { if (!vendorItems[v]) vendorItems[v] = []; vendorItems[v].push(item); }
