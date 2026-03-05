@@ -1435,10 +1435,18 @@
       const work = document.getElementById('meta-work').value || 'Name of Work';
       const date = document.getElementById('meta-date').value;
 
+      const filteredItems = getFiltered();
+
       // Build tabs
       const tabBar = document.getElementById('report-tabs');
       const reportContent = document.getElementById('report-content');
-      const assignedVendors = vendors.filter(v => vendorItems[v.name]);
+
+      // Filter assigned vendors to ONLY include those that actually have items in the current view
+      const assignedVendors = vendors.filter(v => {
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
+        return vItems.length > 0;
+      });
       let tabHtml = '', contentHtml = '';
 
       let extMetaHtml = '';
@@ -1449,8 +1457,6 @@
         });
         extMetaHtml += '</div>';
       }
-
-      const filteredItems = getFiltered();
 
       // Each firm tab
       assignedVendors.forEach((v, vi) => {
@@ -1532,7 +1538,8 @@
       let grandTotal = 0;
       let conRows = '';
       assignedVendors.forEach((v, i) => {
-        const vItems = vendorItems[v.name] || [];
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
         let total = 0;
         vItems.forEach(item => { total += (item.rates[v.name]?.w || 0) * (item.qty || 0); });
         total = Math.round(total);
@@ -1698,7 +1705,9 @@
         if (v) { if (!vendorItems[v]) vendorItems[v] = []; vendorItems[v].push(item); }
       });
 
-      vendors.filter(v => vendorItems[v.name]).forEach(v => {
+      const activeVendors = vendors.filter(v => (vendorItems[v.name] || []).length > 0);
+
+      activeVendors.forEach(v => {
         const vItems = vendorItems[v.name] || [];
         const rows = [
           ['FIRM WAR STATEMENT'],
@@ -1737,7 +1746,7 @@
         ['Sl.No', 'Firm Name', 'Items Awarded', 'Total Amount (INR)', 'Remarks'],
       ];
       let grand = 0;
-      vendors.filter(v => vendorItems[v.name]).forEach((v, i) => {
+      activeVendors.forEach((v, i) => {
         const vItems = vendorItems[v.name] || [];
         let t = 0;
         vItems.forEach(item => t += (item.rates[v.name]?.w || 0) * (item.qty || 0));
