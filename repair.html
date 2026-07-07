@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Repair Quotation Evaluation Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --blue: #003087;
+      --blue2: #0057b8;
+      --blue3: #e8f0fe;
+      --gold: #c8a84b;
+      --red: #c0392b;
+      --green: #1a7a3a;
+      --border: #b0bec5;
+      --text: #1a1a2e;
+      --muted: #546e7a;
+      --white: #fff;
+      --bg: #f0f4f8;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px
+    }
+
+    /* HEADER */
+    .gov-header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue2) 100%);
+      color: #fff;
+      padding: 0
+    }
+
+    .gov-header-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 24px;
+      border-bottom: 3px solid var(--gold)
+    }
+
+    .gov-logo {
+      width: 64px;
+      height: 64px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue);
+      text-align: center;
+      line-height: 1.2;
+      flex-shrink: 0
+    }
+
+    .gov-title h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .5px
+    }
+
+    .gov-title p {
+      font-size: 12px;
+      opacity: .85;
+      margin-top: 2px
+    }
+
+    .gov-meta {
+      background: rgba(0, 0, 0, .25);
+      padding: 10px 24px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap
+    }
+
+    .gov-meta label {
+      font-size: 11px;
+      opacity: .75;
+      display: block;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .gov-meta input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255, 255, 255, .4);
+      color: #fff;
+      font-size: 13px;
+      width: 260px;
+      padding: 2px 0;
+      outline: none
+    }
+
+    .gov-meta input::placeholder {
+      opacity: .5;
+      color: #fff
+    }
+
+    /* STEPS */
+    .steps-bar {
+      display: flex;
+      background: var(--blue);
+      border-top: 1px solid rgba(255, 255, 255, .1)
+    }
+
+    .step-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, .6);
+      border: none;
+      background: none;
+      transition: .2s;
+      letter-spacing: .3px;
+      border-bottom: 3px solid transparent
+    }
+
+    .step-btn.active {
+      color: #fff;
+      border-bottom: 3px solid var(--gold);
+      background: rgba(255, 255, 255, .08)
+    }
+
+    .step-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .05)
+    }
+
+    /* MAIN */
+    .main {
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    /* UPLOAD */
+    .upload-section {
+      max-width: 600px;
+      margin: 40px auto
+    }
+
+    .drop-zone {
+      border: 3px dashed var(--blue2);
+      border-radius: 12px;
+      padding: 60px 40px;
+      text-align: center;
+      background: #fff;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag {
+      border-color: var(--gold);
+      background: var(--blue3)
+    }
+
+    .drop-zone svg {
+      width: 56px;
+      height: 56px;
+      color: var(--blue2);
+      margin-bottom: 16px
+    }
+
+    .drop-zone h3 {
+      font-size: 18px;
+      color: var(--blue);
+      margin-bottom: 8px
+    }
+
+    .drop-zone p {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s;
+      letter-spacing: .3px
+    }
+
+    .btn-primary {
+      background: var(--blue2);
+      color: #fff
+    }
+
+    .btn-primary:hover {
+      background: var(--blue)
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #fff
+    }
+
+    .btn-gold:hover {
+      background: #b8942e
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #fff
+    }
+
+    .btn-green:hover {
+      background: #145f2c
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--blue2);
+      border: 2px solid var(--blue2)
+    }
+
+    .btn-outline:hover {
+      background: var(--blue3)
+    }
+
+    .btn-red {
+      background: var(--red);
+      color: #fff
+    }
+
+    #file-input {
+      display: none
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      gap: 8px
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .badge-red {
+      background: #fde;
+      color: var(--red)
+    }
+
+    .badge-green {
+      background: #e6f4ea;
+      color: var(--green)
+    }
+
+    /* SEARCH */
+    .search-box {
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      width: 260px;
+      outline: none
+    }
+
+    .search-box:focus {
+      border-color: var(--blue2)
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .08)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px
+    }
+
+    thead th {
+      background: var(--blue);
+      color: #fff;
+      padding: 9px 10px;
+      text-align: left;
+      font-size: 11.5px;
+      letter-spacing: .3px;
+      border-right: 1px solid rgba(255, 255, 255, .15);
+      white-space: normal;
+      word-wrap: break-word;
+      vertical-align: bottom
+    }
+
+    thead th:last-child {
+      border-right: none
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f7f9fc
+    }
+
+    tbody tr:hover {
+      background: var(--blue3)
+    }
+
+    tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #e8ecf0;
+      vertical-align: middle;
+      word-wrap: break-word;
+      max-width: 300px
+    }
+
+    .section-row td {
+      background: #e8f0fe;
+      font-weight: 700;
+      color: var(--blue);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px
+    }
+
+    .unassigned td {
+      background: #fff3f3 !important
+    }
+
+    .rate-cell {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      white-space: normal;
+      word-wrap: break-word
+    }
+
+    .rate-cell:hover {
+      background: rgba(0, 87, 184, .05)
+    }
+
+    .rate-best {
+      background: #e6f4ea !important;
+      color: var(--green);
+      font-weight: 700
+    }
+
+    .rate-best::before {
+      content: '★ Lowest';
+      position: absolute;
+      top: 2px;
+      left: 6px;
+      font-size: 9px;
+      color: var(--green);
+      font-family: sans-serif;
+      text-transform: uppercase
+    }
+
+    .rate-cell span.not-quoted {
+      color: #ccc;
+      font-style: italic
+    }
+
+    .rate-content {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px
+    }
+
+    .firm-radio {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue2);
+      cursor: pointer
+    }
+
+    .rate-cell.selected {
+      background: #e8f0fe;
+      border: 2px solid var(--blue2)
+    }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      justify-content: center
+    }
+
+    .pg-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .pg-btn:hover,
+    .pg-btn.active {
+      background: var(--blue2);
+      color: #fff;
+      border-color: var(--blue2)
+    }
+
+    .pg-info {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .qty-input {
+      width: 60px;
+      padding: 4px 6px;
+      border: 1px solid #cdd8eb;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .qty-input:focus {
+      outline: none;
+      border-color: var(--blue2);
+      box-shadow: 0 0 0 2px rgba(0, 87, 184, .15);
+    }
+
+    /* REPORTS */
+    .report-section {
+      margin-top: 24px
+    }
+
+    .firm-report {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 28px;
+      overflow: visible !important;
+      page-break-after: always
+    }
+
+    .firm-header {
+      background: var(--blue);
+      color: #fff;
+      padding: 12px 18px
+    }
+
+    .firm-header h2 {
+      font-size: 15px;
+      letter-spacing: .4px
+    }
+
+    .firm-header p {
+      font-size: 11px;
+      opacity: .75;
+      margin-top: 3px
+    }
+
+    .report-meta {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #f9fafb;
+      display: flex;
+      gap: 24px;
+      font-size: 12px
+    }
+
+    .report-meta span {
+      color: var(--muted)
+    }
+
+    .report-meta strong {
+      color: var(--text)
+    }
+
+    .firm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px
+    }
+
+    .firm-table th {
+      background: #003087;
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 11.5px;
+      border-right: 1px solid rgba(255, 255, 255, .15);
+      white-space: normal;
+      word-wrap: break-word
+    }
+
+    .firm-table th:last-child {
+      border-right: none
+    }
+
+    .firm-table td {
+      padding: 7px 12px;
+      border: 1px solid #d0d8e0;
+      word-wrap: break-word;
+      max-width: 400px
+    }
+
+    .firm-table td.num {
+      text-align: right;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .firm-table tr:nth-child(even) td {
+      background: #f7f9fc
+    }
+
+    .firm-table tfoot td {
+      font-weight: 700;
+      background: #e8f0fe;
+      border-top: 2px solid var(--blue)
+    }
+
+    .firm-table tfoot .num {
+      color: var(--blue)
+    }
+
+    /* CONSOLIDATED */
+    .consolidated-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 16px
+    }
+
+    .consolidated-table th {
+      background: var(--blue);
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left
+    }
+
+    .consolidated-table td {
+      padding: 9px 14px;
+      border: 1px solid #d0d8e0
+    }
+
+    .consolidated-table td.num {
+      text-align: right;
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    .consolidated-table tr:nth-child(even) td {
+      background: #f7f9fc
+    }
+
+    .consolidated-table tfoot td {
+      font-weight: 700;
+      background: #003087;
+      color: #fff;
+      font-size: 14px
+    }
+
+    /* SECTION CARDS */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+      padding: 18px;
+      margin-bottom: 18px
+    }
+
+    .card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--blue3)
+    }
+
+    /* ALERTS */
+    .alert {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .alert-warn {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      color: #5d4037
+    }
+
+    .alert-ok {
+      background: #e6f4ea;
+      border-left: 4px solid var(--green);
+      color: #1b5e20
+    }
+
+    /* HIDDEN */
+    .hidden {
+      display: none !important
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    /* TABS */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--blue);
+      margin-bottom: 18px
+    }
+
+    .tab {
+      padding: 9px 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 6px 6px 0 0;
+      transition: .15s
+    }
+
+    .tab.active {
+      background: var(--blue);
+      color: #fff
+    }
+
+    .tab-panel {
+      display: none
+    }
+
+    .tab-panel.active {
+      display: block
+    }
+
+    /* PRINT */
+    @media print {
+
+      .gov-header,
+      .steps-bar,
+      .toolbar,
+      .pagination,
+      .tab-bar,
+      .no-print {
+        display: none !important
+      }
+
+      .print-only {
+        display: block !important;
+      }
+
+      .print-only.hidden {
+        display: block !important;
+      }
+
+      * {
+        color: #000 !important;
+      }
+
+      /* Reset background and remove shadows */
+      body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+      }
+
+      .report-section {
+        margin: 0
+      }
+
+      /* Firm reports get their own page */
+      .firm-report {
+        page-break-after: always;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      /* PDF-style headers for print */
+      .pdf-header {
+        text-align: center;
+        margin-bottom: 20px;
+        line-height: 1.4;
+      }
+
+      .pdf-header h1 {
+        font-size: 16px;
+        margin: 0;
+        text-transform: uppercase;
+      }
+
+      .pdf-header h2 {
+        font-size: 14px;
+        margin: 0;
+        font-weight: normal;
+      }
+
+      .pdf-header h3 {
+        font-size: 14px;
+        margin: 0;
+        text-transform: uppercase;
+      }
+
+      .pdf-title-line {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: left;
+        margin: 15px 0 5px 0;
+      }
+
+      /* PDF-style footer */
+      .pdf-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: nowrap;
+        width: 100%;
+        margin-top: 40px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .firm-table,
+      .consolidated-table {
+        margin-top: 0;
+        border-collapse: collapse;
+        width: 100%;
+        border-top: 1px solid #000 !important;
+      }
+
+      .firm-table th,
+      .firm-table td,
+      .consolidated-table th,
+      .consolidated-table td {
+        border: 1px solid #000 !important;
+      }
+
+      .firm-table th,
+      .firm-table tfoot td,
+      .consolidated-table th,
+      .consolidated-table tfoot td {
+        background: transparent !important;
+      }
+
+      /* Full summary report specific styles */
+      .full-summary-report {
+        page-break-after: always;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+      }
+
+      .full-summary-report .report-meta {
+        border-bottom: none !important;
+        padding-bottom: 4px !important;
+        margin-bottom: 4px !important;
+      }
+
+      .full-summary-table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 9.5px;
+        border-collapse: collapse;
+        border-top: 1px solid #000 !important;
+      }
+
+      .full-summary-table th,
+      .full-summary-table td {
+        padding: 4px;
+        word-wrap: break-word;
+        white-space: normal;
+        overflow-wrap: break-word;
+        vertical-align: top;
+        border: 1px solid #000 !important;
+      }
+
+      .full-summary-table th {
+        background: transparent !important;
+      }
+
+      /* Ensure backgrounds print correctly */
+      .highlight-yellow {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
+      }
+
+      .highlight-yellow td {
+        background: #fff59d !important;
+        color: #000;
+        font-weight: bold
+      }
+    }
+
+    /* This specific class triggers landscape printing when its tab is active */
+    @media print {
+      body.print-landscape {
+        width: 297mm;
+      }
+    }
+
+    /* We use a global @page rule, and rely on browser print dialog for orientation, 
+       or use a print-specific size property if the browser supports it */
+    @page {
+      margin: 10mm;
+    }
+
+    @media print {
+      body.print-landscape {
+        width: 297mm;
+        /* Force landscape width for content */
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="gov-header">
+    <div class="gov-header-top">
+      <div class="gov-logo">GOK<br>Tender</div>
+      <div class="gov-title">
+        <h1>Repair Quotation Evaluation Tool</h1>
+        <p>Government of Kerala — eTendering Bid Evaluation Tool</p>
+      </div>
+    </div>
+    <div class="gov-meta">
+      <div>
+        <label>Tender Inviting Authority</label>
+        <input type="text" id="meta-authority" placeholder="e.g. Principal, Govt. Victoria College, Palakkad"
+          value="" />
+      </div>
+      <div>
+        <label>Name of Work / Tender No.</label>
+        <input type="text" id="meta-work" placeholder="e.g. A5/4157/2022-23/LABLIBRARY" value="" />
+      </div>
+      <div>
+        <label>Date</label>
+        <input type="text" id="meta-date" value="" />
+      </div>
+    </div>
+    <div class="steps-bar">
+      
+      <button class="step-btn" class="step-btn active" onclick="showStep(0)" id="step-select-btn">② Select Vendors</button>
+      <button class="step-btn" onclick="showStep(1)" id="step-report-btn">③ Reports &amp; Export</button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <div id="active-file-banner" class="hidden no-print"
+      style="background:var(--blue3); padding:10px 24px; border-bottom:1px solid #cdd8eb; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--blue)">
+      <div><span style="font-weight:700">Active File:</span> <span id="active-file-name">Loaded from Local
+          Storage</span></div>
+      <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="resetApp()">↻ Reset Data &
+        Start Over</button>
+    </div>
+
+    <!-- STEP 1: SELECTION -->
+    <div id="step-1" class="step-content hidden">
+      <div class="toolbar no-print">
+        <input type="text" class="search-box" id="search-box" placeholder="🔍 Search items…" oninput="renderTable()" />
+        <select id="dept-filter" class="search-box" style="margin-left: 10px; max-width: 250px; padding: 6px;"
+          onchange="renderTable()">
+          <option value="">All Departments</option>
+        </select>
+        <button class="btn btn-gold" onclick="autoSelectLowest()" style="margin-left: 10px;">⚡ Auto-Select</button>
+        <div id="assign-status"></div>
+        <div class="toolbar-right">
+          <button class="btn btn-primary" onclick="showStep(1);generateReports()">Generate Reports →</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="quote-table">
+          <thead id="quote-thead"></thead>
+          <tbody id="quote-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- STEP 2: REPORTS -->
+    <div id="step-2" class="step-content hidden">
+      <div class="toolbar no-print">
+        <button class="btn btn-outline" onclick="showStep(0)">← Back to Selection</button>
+        <div class="toolbar-right">
+          <button class="btn btn-green" onclick="downloadExcel()">⬇ Download Excel</button>
+          <button class="btn btn-outline" onclick="printAllReports()">🖨 Print All Reports</button>
+          <button class="btn btn-primary" onclick="window.print()">🖨 Print Current Tab</button>
+        </div>
+      </div>
+      <div id="validation-alert" class="no-print"></div>
+      <div class="tab-bar no-print" id="report-tabs"></div>
+      <div id="report-content"></div>
+    </div>
+
+  </div><!-- /main -->
+
+  <script>
+    
+    // ===================== STATE =====================
+    let quoteItems = [
+  {
+    "slno": 1,
+    "desc": "Uv vis spectrophotometer service",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 17700.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 17110.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 14160.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 2,
+    "desc": "Ultra centrifuge",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 4720.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 3,
+    "desc": "PH METER SERVICE AND CALIBRATION",
+    "qty": 2,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 1416.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 442.5
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 767.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 4,
+    "desc": "Hot air oven servicing and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 4130.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 4130.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 3048.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 5,
+    "desc": "Hot air oven handel service",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 767.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 767.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 767.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 6,
+    "desc": "Hot air oven servicing and repair at culture lab",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 4720.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 4720.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 3048.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 7,
+    "desc": "BOD INCUBATOR SERVICE AND CALIBRATION",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5664.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 5310.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 8,
+    "desc": "LAMINOR AIRFLOW SERVICE AND uv lamp replacement",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 1770.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 1770.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 1416.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 9,
+    "desc": "Shaking incubator service and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 4720.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 4720.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 4130.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 10,
+    "desc": "Pen type ph meter service",
+    "qty": 3,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 767.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 885.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 0.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 11,
+    "desc": "Refrigerator service and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 7080.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 7670.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 4720.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 12,
+    "desc": "Leica microscope",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 944.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 885.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 885.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 13,
+    "desc": "LEICA MICROSCOPE SERVICE",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 2360.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 14,
+    "desc": "Stereo microscope service and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 885.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 1416.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 885.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 15,
+    "desc": "Leika microscope 45x service and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 4130.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 0.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 16,
+    "desc": "Invertor service and repair",
+    "qty": 9,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 14160.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 14160.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 12980.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 17,
+    "desc": "Rotary shekar",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 1770.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 1770.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 1770.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 18,
+    "desc": "Micro Centrifuge service",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 885.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 0.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 0.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 19,
+    "desc": "Waterbath servicing and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5310.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5900.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 4189.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 20,
+    "desc": "Benchtop centrifuge service",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5310.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 7080.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 6077.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 21,
+    "desc": "Bench top centrifuge service and repair",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 5000.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 5310.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 0.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 22,
+    "desc": "Hot air oven servicing and repair mol lab",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 2950.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 3540.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 2282.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 23,
+    "desc": "Waterbath servicing and repairing",
+    "qty": 1,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 4000.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 4130.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 4189.0
+      }
+    },
+    "department": "Botany"
+  },
+  {
+    "slno": 24,
+    "desc": "Compound microscope service and repair",
+    "qty": 17,
+    "unit": "Nos",
+    "code": "",
+    "isSection": false,
+    "rates": {
+      "Chemind Chemicals": {
+        "wo": 0,
+        "w": 295.0
+      },
+      "Alpha Diagnostic": {
+        "wo": 0,
+        "w": 354.0
+      },
+      "Science Tech": {
+        "wo": 0,
+        "w": 229.06
+      }
+    },
+    "department": "Botany"
+  }
+];
+    let vendors = [{name: 'Science Tech'}, {name: 'Chemind Chemicals'}, {name: 'Alpha Diagnostic'}];
+    let selections = {};
+    let currentFileName = 'Botany Dept Repair Quotes';
+    let PAGE = 0;
+    const PAGE_SIZE = 50;
+    let extMeta = [];
+        // NEW STATE FOR EXTENDED METADATA
+
+    // ===================== LOCAL STORAGE =====================
+    const STORE_KEY = 'repairTenderApp_v4';
+
+    function saveData() {
+      const data = {
+        quoteItems,
+        vendors,
+        selections,
+        extMeta,
+        fileName: currentFileName,
+        metaAuth: document.getElementById('meta-authority').value,
+        metaWork: document.getElementById('meta-work').value,
+        metaDate: document.getElementById('meta-date').value
+      };
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+      const p = localStorage.getItem(STORE_KEY);
+      if (!p) return false;
+      try {
+        const data = JSON.parse(p);
+        if (!data.quoteItems || data.quoteItems.length === 0) return false;
+
+        quoteItems = data.quoteItems;
+        vendors = data.vendors;
+        selections = data.selections || {};
+        extMeta = data.extMeta || [];
+        currentFileName = data.fileName || 'Saved locally';
+
+        if (data.metaAuth) document.getElementById('meta-authority').value = data.metaAuth;
+        if (data.metaWork) document.getElementById('meta-work').value = data.metaWork;
+        if (data.metaDate) document.getElementById('meta-date').value = data.metaDate;
+
+        return true;
+      } catch (e) {
+        console.error("Error loading local storage:", e);
+        return false;
+      }
+    }
+
+    function resetApp() {
+      if (confirm("Are you sure you want to reset all data and start over? All selections will be lost.")) {
+        localStorage.removeItem(STORE_KEY);
+        location.reload();
+      }
+    }
+
+    
+    // ===================== INIT =====================
+    window.onload = () => {
+      document.getElementById('meta-authority').value = 'HOD, Dept of Botany, Govt Victoria College';
+      document.getElementById('meta-work').value = 'Repair of Equipments';
+      if (!document.getElementById('meta-date').value) {
+        document.getElementById('meta-date').value = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+      }
+
+      // Try load from local storage
+      let localDataLoaded = false;
+      const p = localStorage.getItem(STORE_KEY);
+      if (p) {
+        try {
+          const data = JSON.parse(p);
+          if (data.quoteItems && data.quoteItems.length > 0) {
+            quoteItems = data.quoteItems;
+            vendors = data.vendors;
+            selections = data.selections || {};
+            extMeta = data.extMeta || [];
+            currentFileName = data.fileName || 'Botany Dept Repair Quotes';
+            
+            if (data.metaAuth) document.getElementById('meta-authority').value = data.metaAuth;
+            if (data.metaWork) document.getElementById('meta-work').value = data.metaWork;
+            if (data.metaDate) document.getElementById('meta-date').value = data.metaDate;
+            
+            localDataLoaded = true;
+          }
+        } catch (e) {}
+      }
+      
+      document.getElementById('active-file-banner').classList.remove('hidden');
+      document.getElementById('active-file-name').textContent = currentFileName;
+      
+      showStep(0);
+      buildTableHeader();
+      populateDeptFilter();
+      renderTable();
+      
+      if (!localDataLoaded || Object.keys(selections).length === 0) {
+          // Force auto-select lowest if there are no selections
+          autoSelectLowest(); 
+      }
+      
+      // Setup auto-save
+      ['meta-authority', 'meta-work', 'meta-date'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          if (quoteItems.length > 0) saveData();
+        });
+      });
+    };
+
+    // ===================== TABLE =====================
+    function buildTableHeader() {
+      const thead = document.getElementById('quote-thead');
+      let html = '<tr><th style="width:60px">Sl.No</th><th style="min-width:200px">Description</th><th>Unit</th><th>Qty</th>';
+      for (const v of vendors) {
+        html += `<th style="text-align:right;min-width:140px">${v.name}<br><span style="font-weight:400;font-size:10px;opacity:.75">Rate (with tax)</span></th>`;
+      }
+      html += '</tr>';
+      thead.innerHTML = html;
+    }
+
+    function populateDeptFilter() {
+      const deptFilter = document.getElementById('dept-filter');
+      const uniqueDepts = [...new Set(quoteItems.filter(item => item.isSection).map(item => item.department))];
+
+      let optionsHtml = '<option value="">All Departments</option>';
+      uniqueDepts.forEach(dept => {
+        if (dept && dept !== 'General') {
+          optionsHtml += `<option value="${dept}">${dept}</option>`;
+        }
+      });
+      deptFilter.innerHTML = optionsHtml;
+    }
+
+    function getFiltered() {
+      const q = document.getElementById('search-box').value.toLowerCase();
+      const dept = document.getElementById('dept-filter').value;
+
+      let filtered = quoteItems;
+
+      if (dept) {
+        filtered = filtered.filter(r => r.department === dept);
+      }
+
+      if (!q) return filtered;
+
+      return filtered.filter(r => r.desc.toLowerCase().includes(q) || (r.slno + '').toLowerCase().includes(q));
+    }
+
+    function renderTable() {
+      const filtered = getFiltered();
+      const nonSection = filtered.filter(r => !r.isSection);
+      const totalPages = Math.max(1, Math.ceil(nonSection.length / PAGE_SIZE));
+      if (PAGE >= totalPages) PAGE = 0;
+
+      // Build page items (include section headers before items on this page)
+      const pageStart = PAGE * PAGE_SIZE;
+      const pageEnd = pageStart + PAGE_SIZE;
+      let count = 0;
+      const pageItems = [];
+      let lastSection = null;
+      for (const item of filtered) {
+        if (item.isSection) { lastSection = item; continue; }
+        if (count >= pageEnd) { break; }
+        if (count >= pageStart) {
+          if (lastSection) { pageItems.push(lastSection); lastSection = null; }
+          pageItems.push(item);
+        }
+        count++;
+      }
+
+      // Find lowest per row
+      const rowIdx = {}; let ri = 0;
+      for (const item of quoteItems) if (!item.isSection) rowIdx[ri++] = item;
+
+      const tbody = document.getElementById('quote-tbody');
+      let html = '';
+      let globalIdx = 0;
+      for (const item of quoteItems) { if (!item.isSection) { item._idx = globalIdx++; } }
+
+      for (const item of pageItems) {
+        if (item.isSection) {
+          html += `<tr class="section-row"><td colspan="${4 + vendors.length + 1}">${item.slno ? item.slno + '. ' : ''} ${item.desc}</td></tr>`;
+          continue;
+        }
+        const idx = item._idx;
+        const unassigned = !selections[idx] && !item.isSection;
+        html += `<tr class="${unassigned ? 'unassigned' : ''}" id="row-${idx}">`;
+
+        // Editable Qty
+        const qtyVal = item.qty !== undefined && item.qty !== null ? item.qty : '';
+        const qtyField = `<input type="number" class="qty-input" value="${qtyVal}" step="any" onchange="updateQty(${idx}, this.value)" />`;
+
+        html += `<td>${item.slno}</td><td>${item.desc}</td><td>${item.unit}</td><td>${qtyField}</td>`;
+
+        // Find min rate
+        let minRate = Infinity;
+        for (const v of vendors) { const r = item.rates[v.name]?.w || 0; if (r > 0 && r < minRate) minRate = r; }
+
+        const sel = selections[idx] || '';
+
+        // Render cells with radio buttons
+        for (const v of vendors) {
+          const r = item.rates[v.name]?.w || 0;
+          const isBest = r > 0 && r === minRate;
+          const isSelected = sel === v.name;
+
+          let classes = 'rate-cell';
+          if (isBest) classes += ' rate-best';
+          if (isSelected) classes += ' selected';
+
+          if (r > 0) {
+            html += `<td class="${classes}" onclick="setSelection(${idx}, '${v.name}')">
+          <div class="rate-content">
+            <span>₹${r.toFixed(2)}</span>
+            <input type="radio" name="row-${idx}-radio" class="firm-radio" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); setSelection(${idx}, '${v.name}')">
+          </div>
+        </td>`;
+          } else {
+            html += `<td class="rate-cell"><span style="color:#999">₹0.00</span></td>`;
+          }
+        }
+
+        html += '</tr>';
+      }
+      tbody.innerHTML = html;
+
+      // Pagination
+      renderPagination(totalPages);
+      updateAssignStatus();
+    }
+
+    function renderPagination(total) {
+      const pg = document.getElementById('pagination');
+      if (total <= 1) { pg.innerHTML = ''; return; }
+      let html = `<button class="pg-btn" onclick="changePage(${PAGE - 1})" ${PAGE === 0 ? 'disabled' : ''}>‹</button>`;
+      const start = Math.max(0, PAGE - 2), end = Math.min(total - 1, PAGE + 2);
+      if (start > 0) html += `<button class="pg-btn" onclick="changePage(0)">1</button>${start > 1 ? '<span>…</span>' : ''}`;
+      for (let i = start; i <= end; i++) html += `<button class="pg-btn ${i === PAGE ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`;
+      if (end < total - 1) html += `${end < total - 2 ? '<span>…</span>' : ''}<button class="pg-btn" onclick="changePage(${total - 1})">${total}</button>`;
+      html += `<button class="pg-btn" onclick="changePage(${PAGE + 1})" ${PAGE === total - 1 ? 'disabled' : ''}>›</button>`;
+      html += `<span class="pg-info">&nbsp;Page ${PAGE + 1} of ${total}</span>`;
+      pg.innerHTML = html;
+    }
+
+    function changePage(p) { PAGE = p; renderTable(); window.scrollTo(0, 200); }
+
+    function setSelection(idx, val) {
+      selections[idx] = val;
+      saveData();
+      renderTable(); // re-render to update classes
+    }
+
+    function updateAssignStatus() {
+      const dataItems = quoteItems.filter(r => !r.isSection);
+      const assigned = dataItems.filter((_, i) => selections[i]).length;
+      const unassigned = dataItems.length - assigned;
+      const el = document.getElementById('assign-status');
+      if (unassigned > 0) {
+        el.innerHTML = `<span class="badge badge-red">⚠ ${unassigned} item${unassigned > 1 ? 's' : ''} unassigned</span>`;
+      } else {
+        el.innerHTML = `<span class="badge badge-green">✔ All ${assigned} items assigned</span>`;
+      }
+    }
+
+    function autoSelectLowest() {
+      quoteItems.forEach((item, i) => {
+        if (item.isSection) return;
+        let minRate = Infinity, minVendor = '';
+        for (const v of vendors) {
+          const r = item.rates[v.name]?.w || 0;
+          if (r > 0 && r < minRate) { minRate = r; minVendor = v.name; }
+        }
+        if (minVendor) selections[item._idx] = minVendor;
+      });
+      saveData();
+      renderTable();
+    }
+
+    function updateQty(idx, val) {
+      quoteItems.find(i => i._idx === idx).qty = parseFloat(val) || 0;
+      saveData();
+    }
+
+    // ===================== NUMBER TO WORDS =====================
+    function numberToWords(num) {
+      if (num === 0) return "Zero";
+      const a = ["", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen "];
+      const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+      const nToW = (n) => {
+        let str = "";
+        if (n > 99) { str += a[Math.floor(n / 100)] + "Hundred "; n %= 100; }
+        if (n > 19) { str += b[Math.floor(n / 10)] + " "; n %= 10; }
+        if (n > 0) { str += a[Math.floor(n)]; }
+        return str.trim();
+      };
+
+      let str = "";
+      let split = String(num).split('.');
+      let integerPart = parseInt(split[0], 10);
+      let decimalPart = split.length > 1 ? parseInt(split[1].slice(0, 2).padEnd(2, '0'), 10) : 0;
+
+      if (integerPart > 9999999) { str += nToW(Math.floor(integerPart / 10000000)) + " Crore "; integerPart %= 10000000; }
+      if (integerPart > 99999) { str += nToW(Math.floor(integerPart / 100000)) + " Lakh "; integerPart %= 100000; }
+      if (integerPart > 999) { str += nToW(Math.floor(integerPart / 1000)) + " Thousand "; integerPart %= 1000; }
+      if (integerPart > 0) { str += nToW(integerPart); }
+
+      let res = str.trim();
+      if (decimalPart > 0) {
+        res += " and " + nToW(decimalPart) + " Paise";
+      }
+      return res + " Only";
+    }
+
+    // ===================== STEP NAV =====================
+    function showStep(n) {
+      document.querySelectorAll('.step-content').forEach((el, i) => el.classList.toggle('hidden', i !== n));
+      document.querySelectorAll('.step-btn').forEach((el, i) => el.classList.toggle('active', i === n));
+    }
+
+    // ===================== REPORTS =====================
+    function fmt(n) { return '₹' + (+n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function generateReports() {
+      // Group selections by vendor
+      const vendorItems = {}; // vendorName => [{item, idx}]
+      quoteItems.forEach((item) => {
+        if (item.isSection) return;
+        const idx = item._idx;
+        const v = selections[idx];
+        if (v) {
+          if (!vendorItems[v]) vendorItems[v] = [];
+          vendorItems[v].push(item);
+        }
+      });
+
+      const unassigned = quoteItems.filter(r => !r.isSection && !selections[r._idx]);
+      const alertEl = document.getElementById('validation-alert');
+      if (unassigned.length > 0) {
+        alertEl.innerHTML = `<div class="alert alert-warn">⚠ <strong>${unassigned.length} item(s) not assigned</strong> to any firm and will not appear in reports: ${unassigned.slice(0, 5).map(r => r.slno).join(', ')}${unassigned.length > 5 ? '…' : ''}</div>`;
+      } else {
+        alertEl.innerHTML = `<div class="alert alert-ok">✔ All items assigned. Generating full report.</div>`;
+      }
+
+      const authority = document.getElementById('meta-authority').value || 'Tender Inviting Authority';
+      const work = document.getElementById('meta-work').value || 'Name of Work';
+      const date = document.getElementById('meta-date').value;
+
+      const filteredItems = getFiltered();
+
+      // Build tabs
+      const tabBar = document.getElementById('report-tabs');
+      const reportContent = document.getElementById('report-content');
+
+      // Filter assigned vendors to ONLY include those that actually have items in the current view
+      const assignedVendors = vendors.filter(v => {
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
+        return vItems.length > 0;
+      });
+      let tabHtml = '', contentHtml = '';
+
+      let extMetaHtml = '';
+      if (extMeta && extMeta.length > 0) {
+        extMetaHtml = '<div class="ext-meta-block print-only hidden" style="text-align:left; font-size:13px; line-height:1.5; margin-bottom:20px; font-weight:bold;">';
+        extMeta.forEach(line => {
+          extMetaHtml += `<div>${line}</div>`;
+        });
+        extMetaHtml += '</div>';
+      }
+
+      // Each firm tab
+      assignedVendors.forEach((v, vi) => {
+        // filter vItems to only exist in the current filteredItems context
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
+
+        let firmTotal = 0;
+        const active = vi === 0 ? 'active' : '';
+        tabHtml += `<div class="tab ${active}" onclick="switchTab(${vi})">${v.name}</div>`;
+
+        let rows = '';
+        vItems.forEach((item, rowN) => {
+          const rate = item.rates[v.name]?.w || 0;
+          const total = rate * (item.qty || 0);
+          firmTotal += total;
+          rows += `<tr>
+        <td>${item.slno}</td>
+        <td>${item.desc}</td>
+        <td class="num">${fmt(rate)}</td>
+        <td class="num">${item.qty || ''}</td>
+        <td class="num">${fmt(total)}</td>
+      </tr>`;
+        });
+
+        firmTotal = Math.round(firmTotal);
+
+        contentHtml += `<div class="tab-panel ${active}" id="tab-panel-${vi}">
+      <div class="firm-report">
+        
+        <!-- Screen viewing header -->
+        <div class="firm-header no-print">
+          <h2>FIRM WAR STATEMENT — ${v.name}</h2>
+          <p>Prepared for: ${authority} | Work: ${work} | Date: ${date}</p>
+        </div>
+        
+        <!-- Print targeting header (matches PDF) -->
+        <div class="pdf-header print-only hidden" style="text-align:center;">
+            <h1 style="font-size:18px; margin:0;">GOVERNMENT VICTORIA COLLEGE, PALAKKAD</h1>
+            <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">${work}</h2>
+            <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">Firm War Statement</h2>
+          </div>
+          <table class="print-only hidden" style="width:100%; border-collapse:collapse; margin-bottom:-1px;">
+            <tr>
+              <td style="width:8%; border:1px solid #000; padding:6px; font-weight:bold; font-size:14px; border-bottom:none;">FIRM:</td>
+              <td style="border:1px solid #000; padding:6px; font-weight:bold; font-size:14px; border-bottom:none;">${v.name}</td>
+            </tr>
+          </table>
+
+        <table class="firm-table">
+          <thead><tr>
+            <th style="width:8%">Sl No.</th>
+            <th style="width:45%">Item</th>
+            <th class="num" style="width:15%">Unit Price</th>
+            <th class="num" style="width:10%">Nos</th>
+            <th class="num" style="width:22%">Total Price</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="text-align:right;font-size:13px; font-weight:bold;">Grand Total:</td>
+              <td class="num" style="font-weight:bold">${fmt(firmTotal)}</td>
+            </tr>
+            <tr>
+              <td colspan="5" style="text-align:left; font-size:13px; background:#fff border:none">
+                Rupees ${numberToWords(firmTotal)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <!-- Print view footer -->
+        <div class="pdf-footer print-only hidden" style="width: 100%; margin-top: 40px; font-weight: normal; font-size: 14px; text-align: left; display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="margin-bottom: 4px;">Palakkad</div>
+            <div>${date}</div>
+          </div>
+          <div style="text-align:right;">HOD Botany</div>
+        </div>
+        
+      </div>
+    </div>`;
+      });
+
+      // Consolidated tab
+      tabHtml += `<div class="tab" onclick="switchTab(${assignedVendors.length})">📋 Consolidated</div>`;
+      let grandTotal = 0;
+      let conRows = '';
+      assignedVendors.forEach((v, i) => {
+        const rootItems = vendorItems[v.name] || [];
+        const vItems = rootItems.filter(item => filteredItems.includes(item));
+        let total = 0;
+        vItems.forEach(item => { total += (item.rates[v.name]?.w || 0) * (item.qty || 0); });
+        total = Math.round(total);
+        grandTotal += total;
+        conRows += `<tr><td>${i + 1}</td><td>${v.name}</td><td class="num">${fmt(total)}</td></tr>`;
+      });
+
+      grandTotal = Math.round(grandTotal);
+      contentHtml += `<div class="tab-panel" id="tab-panel-${assignedVendors.length}">
+    <div class="card firm-report">
+      
+      <!-- Screen view header -->
+      <h3 class="no-print">Consolidated Summary</h3>
+      <div class="report-meta no-print" style="padding:0 0 12px 0">
+        <div><span>Authority: </span><strong>${authority}</strong></div>
+        <div><span>Work: </span><strong>${work}</strong></div>
+        <div><span>Date: </span><strong>${date}</strong></div>
+      </div>
+      
+      <!-- Print view header (Matches PDF) -->
+      <div class="pdf-header print-only hidden" style="text-align:center;">
+          <h1 style="font-size:18px; margin:0;">GOVERNMENT VICTORIA COLLEGE, PALAKKAD</h1>
+          <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">${work}</h2>
+          <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">Consolidated Statement</h2>
+        </div>
+
+      <table class="consolidated-table">
+        <thead><tr>
+          <th style="width:10%">Sl No.</th>
+          <th style="width:65%">Firm</th>
+          <th style="width:25%; text-align:right">Total Amount</th>
+        </tr></thead>
+        <tbody>${conRows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="text-align:right; font-weight:bold">Grand Total:</td>
+            <td class="num" style="font-weight:bold">${fmt(grandTotal)}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align:left; font-size:13px; background:#fff; border:none">
+              Rupees ${numberToWords(grandTotal)}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      <!-- Print view footer -->
+      <div class="pdf-footer print-only hidden" style="width: 100%; margin-top: 40px; font-weight: normal; font-size: 14px; text-align: left; display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <div style="margin-bottom: 4px;">Palakkad</div>
+              <div>${date}</div>
+            </div>
+            <div style="text-align:right;">HOD Botany</div>
+          </div>
+      
+    </div>
+  </div>`;
+
+      // ===================== NEW: FULL BOQ SUMMARY (LANDSCAPE) =====================
+      const summaryTabIndex = assignedVendors.length + 1;
+      tabHtml += `<div class="tab" onclick="switchTab(${summaryTabIndex})">📊 Full Quotes Report (Landscape)</div>`;
+
+      let fullHdr = `<tr>
+    <th style="width:4%">Sl</th>
+    <th style="width:16%">Description</th>
+    <th style="width:5%">Unit</th>
+    <th style="width:5%">Qty</th>`;
+      vendors.forEach(v => {
+        fullHdr += `<th>${v.name}</th>`;
+      });
+      fullHdr += `</tr>`;
+
+      let fullRows = '';
+      filteredItems.forEach(item => {
+        if (item.isSection) {
+          fullRows += `<tr class="section-row"><td colspan="${4 + vendors.length}">${item.slno ? item.slno + '. ' : ''} ${item.desc}</td></tr>`;
+          return;
+        }
+
+        let rowCells = `<td>${item.slno}</td><td>${item.desc}</td><td>${item.unit || ''}</td><td>${item.qty || ''}</td>`;
+        const selectedVendor = selections[item._idx];
+
+        vendors.forEach(v => {
+          const r = item.rates[v.name]?.w || 0;
+          const isSelected = selectedVendor === v.name;
+          const cellContent = r > 0 ? fmt(r) : '0.00';
+
+          if (isSelected) {
+            rowCells += `<td style="background:#fff59d!important; color:#000; font-weight:bold; font-size: 13px;" class="highlight-yellow">${cellContent}</td>`;
+          } else {
+            rowCells += `<td style="font-size: 13px; font-weight: 600;">${cellContent}</td>`;
+          }
+        });
+
+        fullRows += `<tr>${rowCells}</tr>`;
+      });
+
+      contentHtml += `<div class="tab-panel" id="tab-panel-${summaryTabIndex}">
+    <div class="card full-summary-report">
+        <h3 class="no-print">FULL QUOTES SUMMARY REPORT</h3>
+        <!-- Print view header (Matches PDF) -->
+        <div class="pdf-header print-only hidden" style="text-align:center;">
+          <h1 style="font-size:18px; margin:0;">GOVERNMENT VICTORIA COLLEGE, PALAKKAD</h1>
+          <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">${work}</h2>
+          <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">Full Quotes Summary Report</h2>
+        </div>
+      ${extMetaHtml}
+      <div class="report-meta no-print" style="padding:0 0 12px 0; border-bottom:1px solid #ccc; margin-bottom:12px;">
+        <div><span>Authority: </span><strong>${authority}</strong></div>
+        <div><span>Work: </span><strong>${work}</strong></div>
+        <div><span>Date: </span><strong>${date}</strong></div>
+        <div style="margin-left:auto" class="no-print"><strong style="background:#fff59d; padding:2px 6px; border:1px solid #ccc;">Yellow highlights indicate selected firm</strong></div>
+      </div>
+      <table class="consolidated-table full-summary-table" style="font-size:11px">
+        <thead>${fullHdr}</thead>
+        <tbody>${fullRows}</tbody>
+      </table>
+      
+      <!-- Print view footer -->
+      <div class="pdf-footer print-only hidden" style="width: 100%; margin-top: 40px; font-weight: normal; font-size: 14px; text-align: left; display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <div style="margin-bottom: 4px;">Palakkad</div>
+              <div>${date}</div>
+            </div>
+            <div style="text-align:right;">HOD Botany</div>
+          </div>
+      
+    </div>
+  </div>`;
+
+      tabBar.innerHTML = tabHtml;
+      reportContent.innerHTML = contentHtml;
+    }
+
+    function switchTab(n) {
+      document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', i === n));
+      document.querySelectorAll('.tab-panel').forEach((el, i) => el.classList.toggle('active', i === n));
+
+      // Check if we are on the Full Quotes Report tab (the last tab)
+      const isSummaryTab = (n === document.querySelectorAll('.tab').length - 1);
+      if (isSummaryTab) {
+        document.body.classList.add('print-landscape');
+      } else {
+        document.body.classList.remove('print-landscape');
+      }
+    }
+
+    function printAllReports() {
+      // Temporarily show all tab panels for printing
+      document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('active'));
+      // Ensure landscape formatting is removed so standard reports print normally
+      // Note: Full BoQ is so wide it might be squeezed on portrait, but this is the simplest way to batch print
+      document.body.classList.remove('print-landscape');
+
+      window.print();
+
+      // Restore to the first tab (or currently active tab) after printing dialog closes
+      setTimeout(() => {
+        switchTab(0);
+      }, 500); // Slight delay ensures styles re-apply cleanly
+    }
+
+    // ===================== EXCEL EXPORT =====================
+    function downloadExcel() {
+      const wb = XLSX.utils.book_new();
+      const authority = document.getElementById('meta-authority').value || '';
+      const work = document.getElementById('meta-work').value || '';
+      const date = document.getElementById('meta-date').value || '';
+      const filteredItems = getFiltered();
+
+      const vendorItems = {};
+      filteredItems.forEach(item => {
+        if (item.isSection) return;
+        const v = selections[item._idx];
+        if (v) { if (!vendorItems[v]) vendorItems[v] = []; vendorItems[v].push(item); }
+      });
+
+      const activeVendors = vendors.filter(v => (vendorItems[v.name] || []).length > 0);
+
+      activeVendors.forEach(v => {
+        const vItems = vendorItems[v.name] || [];
+        const rows = [
+          ['FIRM WAR STATEMENT'],
+          [`Tender Inviting Authority: ${authority}`],
+          [`Name of Work: ${work}`],
+          [`Date: ${date}`],
+          [],
+          [`FIRM: ${v.name}`],
+          [],
+          ['Sl.No', 'Item Description', 'Unit', 'Qty', 'Unit Price (with tax)', 'Total Price', 'Remarks'],
+        ];
+        let total = 0;
+        vItems.forEach(item => {
+          const rate = item.rates[v.name]?.w || 0;
+          const t = rate * (item.qty || 0);
+          total += t;
+          rows.push([item.slno, item.desc, item.unit || '', item.qty || 0, rate, t, '']);
+        });
+
+        total = Math.round(total);
+
+        rows.push([]);
+        rows.push(['', '', '', '', 'Total', total, '']);
+        rows.push(['Amount in Words:', 'Rupees ' + numberToWords(total), '', '', '', '', '']);
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{ wch: 8 }, { wch: 45 }, { wch: 8 }, { wch: 8 }, { wch: 18 }, { wch: 18 }, { wch: 15 }];
+        const sname = v.name.replace(/[\/\\?\*\[\]:]/g, '').substring(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sname);
+      });
+
+      // Consolidated sheet
+      const conRows = [
+        ['CONSOLIDATED BID EVALUATION STATEMENT'],
+        [`Authority: ${authority}`], [`Work: ${work}`], [`Date: ${date}`], [],
+        ['Sl.No', 'Firm Name', 'Items Awarded', 'Total Amount (INR)', 'Remarks'],
+      ];
+      let grand = 0;
+      activeVendors.forEach((v, i) => {
+        const vItems = vendorItems[v.name] || [];
+        let t = 0;
+        vItems.forEach(item => t += (item.rates[v.name]?.w || 0) * (item.qty || 0));
+        t = Math.round(t);
+        grand += t;
+        conRows.push([i + 1, v.name, vItems.length, t, '']);
+      });
+
+      grand = Math.round(grand);
+
+      conRows.push([]);
+      conRows.push(['', '', 'Grand Total', grand, '']);
+      conRows.push(['Grand Total in Words:', 'Rupees ' + numberToWords(grand), '', '', '']);
+
+      const conWs = XLSX.utils.aoa_to_sheet(conRows);
+      conWs['!cols'] = [{ wch: 8 }, { wch: 40 }, { wch: 16 }, { wch: 20 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, conWs, 'Consolidated');
+
+      XLSX.writeFile(wb, 'FirmWarStatements.xlsx');
+    }
+  </script>
+</body>
+
+</html>
