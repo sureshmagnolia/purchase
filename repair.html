@@ -696,6 +696,10 @@
         display: block !important;
       }
 
+      tr.print-only.hidden {
+        display: table-row !important;
+      }
+
       * {
         color: #000 !important;
       }
@@ -1910,21 +1914,20 @@
             <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">${work}</h2>
             <h2 style="font-size:15px; margin:4px 0 0 0; font-weight:normal;">Firm War Statement</h2>
           </div>
-          <table class="print-only hidden" style="width:100%; border-collapse:collapse; margin-bottom:-1px;">
-            <tr>
-              <td style="width:8%; border:1px solid #000; padding:6px; font-weight:bold; font-size:14px; border-bottom:none;">FIRM:</td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold; font-size:14px; border-bottom:none;">${v.name}</td>
-            </tr>
-          </table>
-
         <table class="firm-table">
-          <thead><tr>
-            <th style="width:8%">Sl No.</th>
-            <th style="width:45%">Item</th>
-            <th class="num" style="width:15%">Unit Price</th>
-            <th class="num" style="width:10%">Nos</th>
-            <th class="num" style="width:22%">Total Price</th>
-          </tr></thead>
+          <thead>
+            <tr class="print-only hidden">
+              <th style="width:8%; border:1px solid #000 !important; padding:6px; font-weight:bold; font-size:14px; border-bottom:none !important; text-align:left;">FIRM:</th>
+              <th colspan="4" style="border:1px solid #000 !important; padding:6px; font-weight:bold; font-size:14px; border-bottom:none !important; text-align:left;">${v.name}</th>
+            </tr>
+            <tr>
+              <th style="width:8%">Sl No.</th>
+              <th style="width:45%">Item</th>
+              <th class="num" style="width:15%">Unit Price</th>
+              <th class="num" style="width:10%">Nos</th>
+              <th class="num" style="width:22%">Total Price</th>
+            </tr>
+          </thead>
           <tbody>${rows}</tbody>
           <tfoot>
             <tr>
