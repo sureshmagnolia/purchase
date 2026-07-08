@@ -1447,7 +1447,7 @@
         // NEW STATE FOR EXTENDED METADATA
 
     // ===================== LOCAL STORAGE =====================
-    const STORE_KEY = 'repairTenderApp_v10';
+    const STORE_KEY = 'repairTenderApp_v11';
 
     function saveData() {
       const data = {
@@ -1828,7 +1828,7 @@
           const total = rate * (item.qty || 0);
           firmTotal += total;
           rows += `<tr>
-        <td>${item.slno}</td>
+        <td>${rowN + 1}</td>
         <td>${item.desc}</td>
         <td class="num">${fmt(rate)}</td>
         <td class="num">${item.qty || ''}</td>
